@@ -61,14 +61,19 @@
                         flag = false;
                     }
                     if(flag){
-                        console.log($('#addCommentForm').serialize());
+                        var url = '/comments';
+                        var method = 'POST';
+                        if($(this).text() == 'Сохранить'){
+                            url += '/' + $(this).data('post-id');
+                            method = 'PUT';
+                        }
                         $.ajax({
-                            url: '/comments',
-                            method: "POST",
+                            url: url,
+                            method: method,
                             dataType: 'json',
                             data: $('#addCommentForm').serialize(),
                             success: function (res) {
-                                createComment(res);
+                                getComments($('#getComments').data('id'));
                             },
                             error: function (res) {
                                 console.log(res);
@@ -99,6 +104,37 @@
         ).append(
             $('<div />',{
                 'text': comment.text
+            })
+        ).append(
+            $('<button />',{
+                'text': 'Редактировать',
+                'data-id': comment.id,
+                'class': 'btn btn-primary'
+            }).on('click', function (e) {
+                e.preventDefault();
+                $('#addCommentForm').find('[name="user_name"]').val($(this).prev().prev().text());
+                $('#addCommentForm').find('[name="text"]').val($(this).prev().text());
+                $('#addCommentForm').find('.btn-success').text('Сохранить');
+                $('#addCommentForm').find('.btn-success').attr('data-post-id', $(this).data('id'));
+            })
+        ).append(
+            $('<button />',{
+                'text': 'Удалить',
+                'data-id': comment.id,
+                'class': 'btn btn-danger'
+            }).on('click', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/comments/' + $(this).data('id'),
+                    method: 'DELETE',
+                    dataType: 'json',
+                    success: function (res) {
+                        getComments($('#getComments').data('id'));
+                    },
+                    error: function (res) {
+                        console.log(res);
+                    }
+                })
             })
         );
         commentsBlock.append(commentBlock);
